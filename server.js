@@ -10,9 +10,9 @@ app.use(express.json());
 // Health check
 app.get("/", (req, res) => res.send("Bluedart API is running"));
 
-// Track single AWB
-app.post("/track", async (req, res) => {
-  const { awb } = req.body;
+// ✅ Track single AWB via GET for compatibility with Chrome Extension
+app.get("/track", async (req, res) => {
+  const awb = req.query.awb;
   if (!awb) return res.status(400).json({ error: "Missing AWB" });
 
   try {
@@ -25,6 +25,7 @@ app.post("/track", async (req, res) => {
     const html = await response.text();
     const match = html.match(/<td class="[^"]*statusDateTime[^"]*">([\s\S]*?)<\/td>/);
     const status = match ? match[1].replace(/<[^>]*>/g, "").trim() : "Status not found";
+
     return res.json({ awb, status });
 
   } catch (err) {
@@ -33,4 +34,4 @@ app.post("/track", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
