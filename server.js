@@ -2,17 +2,17 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // ✅ Must use process.env.PORT for Render
 
 app.use(cors());
 app.use(express.json());
 
-// Health check
+// Health Check
 app.get("/", (req, res) => res.send("Bluedart API is running"));
 
-// ✅ Track single AWB via GET for compatibility with Chrome Extension
-app.get("/track", async (req, res) => {
-  const awb = req.query.awb;
+// Track AWB
+app.post("/track", async (req, res) => {
+  const { awb } = req.body;
   if (!awb) return res.status(400).json({ error: "Missing AWB" });
 
   try {
@@ -34,4 +34,5 @@ app.get("/track", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
