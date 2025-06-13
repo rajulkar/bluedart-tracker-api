@@ -1,24 +1,7 @@
-const express = require("express");
-const fetch = require("node-fetch");
-const cors = require("cors");
-
-const app = express();
-const PORT = process.env.PORT || 10000; // Use Render-assigned port
-
-app.use(cors());
-app.use(express.json());
-
-// Health check route
-app.get("/", (req, res) => {
-  res.send("Bluedart API is running");
-});
-
 // Track single AWB
 app.post("/track", async (req, res) => {
   const { awb } = req.body;
-  if (!awb) {
-    return res.status(400).json({ error: "Missing AWB" });
-  }
+  if (!awb) return res.status(400).json({ error: "Missing AWB" });
 
   try {
     const response = await fetch("https://www.bluedart.com/servlet/RoutingServlet", {
@@ -31,23 +14,20 @@ app.post("/track", async (req, res) => {
 
     const html = await response.text();
 
-    // Extract all <td> elements
+    // Extract all <td> blocks
     const tdMatches = [...html.matchAll(/<td[^>]*>(.*?)<\/td>/g)];
 
-    // Find first <td> that contains typical status phrases
+    // Try to find the status from common phrases
     const statusTd = tdMatches.find(match =>
-      /delivered|shipment arrived|out for delivery|in transit/i.test(match[1])
+      /delivered|shipment arrived|out for delivery|in transit|consignment/i.test(match[1].toLowerCase())
     );
 
-    const status = statusTd ? statusTd[1].trim() : "Status not found";
+    const status = statusTd ? statusTd[1].replace(/<[^>]+>/g, "").trim() : "Status not found";
 
-    res.json({ awb, status });
+    return res.json({ awb, status });
+
   } catch (err) {
     console.error("Fetch error:", err);
-    res.status(500).json({ error: "Fetch failed" });
+    return res.status(500).json({ error: "Fetch failed" });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
